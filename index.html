@@ -1,0 +1,93 @@
+<html>
+  <head>
+    <title>
+      gcht - funny chat
+    </title>
+
+    <style>
+      * {
+        padding: 10px;
+        background-color: black;
+        color: white;
+        font-size: 25px;
+      }
+    </style>
+  </head>
+  <body>
+    <pre id="msgs">
+CONNECTED TO CHAT
+    </pre>
+
+    user:
+    <br />
+    <input id="u" type="text" />
+    <br />
+    message:
+    <br />
+    <textarea id="m"></textarea>
+    <br />
+    pull time ms:
+    <br />
+    <input min="1000" value="1000" id="t" type="number" />
+    <br />
+    <br />
+    <button onclick="sendMsg()">
+      send
+    </button>
+  </body>
+  <script>
+    let msgs = document.getElementById("msgs");
+    let idx = 0;
+
+    let u = document.getElementById("u");
+    let m = document.getElementById("m");
+    let t = document.getElementById("t");
+
+    (async () => {
+      do {
+        await new Promise((r) => setTimeout(r, t.value));
+        try {
+          let r = await fetch(
+            `http://${window.location.host}/api/get_messages/${idx}`,
+            {
+              method: "GET",
+            },
+          );
+
+          let data = await r.json();
+          if (data.length == 0) {
+            continue;
+          }
+
+          if (idx == 0) {
+            idx = data[0].i;
+          }
+
+          for (let msg of data) {
+            if (idx >= msg.i) {
+              continue;
+            }
+
+            idx = msg.i;
+            msgs.innerHTML += `\n ${msg.u}: ${msg.m}`;
+          }
+        } catch (err) {
+          console.log(err);
+        }
+      } while (true);
+    })();
+
+    let sendMsg = () => {
+      let raw = JSON.stringify({
+        "u": u.value,
+        "m": m.value,
+      });
+
+      fetch(`http://${window.location.host}/api/new_message`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: raw,
+      });
+    };
+  </script>
+</html>
