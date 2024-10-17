@@ -11,29 +11,33 @@
         color: white;
         font-size: 25px;
       }
+
+      #msgs-container {
+        overflow: scroll;
+        max-height: 60vh;
+      }
     </style>
   </head>
   <body>
-    <pre id="msgs">
+    <div id="msgs-container">
+      <pre id="msgs">
 CONNECTED TO CHAT
-    </pre>
-
-    user:
-    <br />
-    <input id="u" type="text" />
-    <br />
-    message:
-    <br />
-    <textarea id="m"></textarea>
-    <br />
-    pull time ms:
-    <br />
-    <input min="1000" value="1000" id="t" type="number" />
-    <br />
-    <br />
-    <button onclick="sendMsg()">
-      send
-    </button>
+      </pre>
+    </div>
+    <form id="f">
+      user:
+      <br />
+      <input id="u" type="text" />
+      <br />
+      message:
+      <br />
+      <input id="m" type="text" />
+      <br />
+      <br />
+      <button>
+        send
+      </button>
+    </form>
   </body>
   <script>
     let msgs = document.getElementById("msgs");
@@ -42,10 +46,28 @@ CONNECTED TO CHAT
     let u = document.getElementById("u");
     let m = document.getElementById("m");
     let t = document.getElementById("t");
+    let f = document.getElementById("f");
+
+    let sendMsg = () => {
+      let raw = JSON.stringify({
+        "u": u.value,
+        "m": m.value,
+      });
+
+      fetch(`http://${window.location.host}/api/new_message`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: raw,
+      });
+
+      m.value = "";
+    };
+
+    f.onclick = (e) => (e.preventDefault(), sendMsg());
 
     (async () => {
       do {
-        await new Promise((r) => setTimeout(r, t.value));
+        await new Promise((r) => setTimeout(r, 1000));
         try {
           let r = await fetch(
             `http://${window.location.host}/api/get_messages/${idx}`,
@@ -76,18 +98,5 @@ CONNECTED TO CHAT
         }
       } while (true);
     })();
-
-    let sendMsg = () => {
-      let raw = JSON.stringify({
-        "u": u.value,
-        "m": m.value,
-      });
-
-      fetch(`http://${window.location.host}/api/new_message`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: raw,
-      });
-    };
   </script>
 </html>
